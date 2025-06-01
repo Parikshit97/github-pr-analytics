@@ -14,7 +14,7 @@ app.use('/repos/:owner/:repo/prs', prRoutes);
 app.use('/repos/:owner/:repo/dev', developerRoutes);
 
 // Swagger docs
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
