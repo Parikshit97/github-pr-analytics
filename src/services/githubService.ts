@@ -8,6 +8,46 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
 
+/**
+ * @openapi
+ * /repos/{owner}/{repo}/prs/open:
+ *   get:
+ *     summary: Get open pull requests for a repository
+ *     parameters:
+ *       - in: path
+ *         name: owner
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: GitHub repository owner
+ *       - in: path
+ *         name: repo
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Repository name
+ *     responses:
+ *       200:
+ *         description: List of open pull requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   title:
+ *                     type: string
+ *                   author:
+ *                     type: string
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
+ *                   status:
+ *                     type: string
+ *       500:
+ *         description: Failed to fetch open pull requests
+ */
 export const getOpenPRs = async (req: Request, res: Response) => {
   const { owner, repo } = req.params;
 
