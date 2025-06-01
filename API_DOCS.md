@@ -51,6 +51,9 @@ GET /repos/:owner/:repo/pulls/open
 
 - **Error Response:**
 ```json
+[
 {
   "message": "Failed to fetch open PRs"
 }
+ ...
+]
