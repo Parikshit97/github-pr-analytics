@@ -1,4 +1,7 @@
 // swagger.ts
+import dotenv from 'dotenv';
+dotenv.config(); // Load .env before using process.env
+
 import swaggerJSDoc from 'swagger-jsdoc';
 
 const swaggerDefinition = {
