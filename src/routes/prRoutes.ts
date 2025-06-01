@@ -1,5 +1,7 @@
+// routes/prRoutes.ts
+
 import express from 'express';
-import { getOpenPRs, getPRTimingMetrics } from '../services/githubService.js';
+import { PRController } from '../controllers/PRController.js'; // Update the path as needed
 
 const router = express.Router({ mergeParams: true });
 
@@ -38,7 +40,7 @@ const router = express.Router({ mergeParams: true });
  *                   status:
  *                     type: string
  */
-router.get('/open', getOpenPRs);
+router.get('/open', PRController.getOpenPRs);
 
 /**
  * @openapi
@@ -82,6 +84,6 @@ router.get('/open', getOpenPRs);
  *                     duration_open_ms:
  *                       type: number
  */
-router.get('/timing', getPRTimingMetrics);
+router.get('/timing', PRController.getPRTimingMetrics);
 
 export default router;

@@ -1,5 +1,6 @@
+import { DeveloperAnalyticsParams } from '../types/dto.js';
+import { PRController } from '../controllers/PRController.js';
 import express from 'express';
-import { getDeveloperAnalytics } from '../services/githubService.js';
 
 const router = express.Router({ mergeParams: true });
 
@@ -39,7 +40,15 @@ const router = express.Router({ mergeParams: true });
  *                 avg_merge_time_ms:
  *                   type: number
  */
-router.get('/:username/analytics', getDeveloperAnalytics);
+// Instead of passing the method reference directly,
+// use an arrow function wrapper to handle typing properly.
 
-
+router.get('/:username/analytics', (req, res, next) => {
+    const params = req.params as unknown as DeveloperAnalyticsParams;
+  
+    const typedReq = Object.assign(req, { params });
+  
+    PRController.getDeveloperAnalytics(typedReq, res).catch(next);
+  });
+  
 export default router;
