@@ -46,14 +46,17 @@ GET /repos/:owner/:repo/pulls/open
     "created_at": "2024-05-01T10:00:00Z",
     "status": "open"
   },
-  ...
 ]
 
+```
+
 - **Error Response:**
+
 ```json
 [
 {
   "message": "Failed to fetch open PRs"
 }
- ...
 ]
+
+```
