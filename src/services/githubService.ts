@@ -12,45 +12,45 @@ export class GitHubService {
     auth: process.env.GITHUB_TOKEN,
   });
 
-  static async getOpenPRs(req: Request<PRRequestParams>, res: Response<OpenPR[] | { message: string }>) {
-    const { owner, repo } = req.params;
-
-    try {
-      const { data } = await this.octokit.pulls.list({ owner, repo, state: 'open', per_page: 100 });
-      const result: OpenPR[] = data.map(pr => ({
-        title: pr.title,
-        author: pr.user?.login ?? null,
-        created_at: pr.created_at,
-        status: pr.draft ? 'draft' : 'open',
-      }));
-      res.json(result);
-    } catch (error: any) {
-      console.error('Error fetching open PRs:', error.message);
-      res.status(500).json({ message: 'Failed to fetch open PRs' });
-    }
-  }
-
   static async getPRTimingMetrics(
     req: Request<PRRequestParams>,
     res: Response<PRTimingMetrics | { message: string }>
   ) {
     const { owner, repo } = req.params;
   
+    const accessToken = (req.user as any)?.accessToken;
+    if (!accessToken) {
+      return res.status(401).json({ message: 'Access token not found' });
+    }
+  
+    const octokit = new Octokit({ auth: accessToken });
+  
     try {
-      const { data } = await this.octokit.pulls.list({ owner, repo, state: 'all', per_page: 100 });
+      const { data } = await octokit.pulls.list({
+        owner,
+        repo,
+        state: 'all',
+        per_page: 100,
+      });
   
       const now = Date.now();
-      const open = data.filter(pr => pr.state === 'open');
-      const closed = data.filter(pr => pr.state !== 'open');
   
-      const openDurations = open.map(pr => now - new Date(pr.created_at).getTime());
-      const avgClosedDuration = closed.length
-        ? closed.reduce((acc, pr) => acc + (new Date(pr.closed_at!).getTime() - new Date(pr.created_at).getTime()), 0) / closed.length
-        : 0;
+      const openPRs = data.filter(pr => pr.state === 'open' && pr.created_at);
+      const closedPRs = data.filter(pr => pr.state !== 'open' && pr.created_at && pr.closed_at);
   
-      const longestOpen = open.reduce<{ pr: PullRequest | null; duration: number }>(
+      const openDurations = openPRs.map(pr => now - new Date(pr.created_at!).getTime());
+  
+      const avgClosedDuration =
+        closedPRs.length > 0
+          ? closedPRs.reduce(
+              (acc, pr) => acc + (new Date(pr.closed_at!).getTime() - new Date(pr.created_at!).getTime()),
+              0
+            ) / closedPRs.length
+          : 0;
+  
+      const longestOpen = openPRs.reduce<{ pr: typeof data[0] | null; duration: number }>(
         (acc, pr) => {
-          const duration = now - new Date(pr.created_at).getTime();
+          const duration = now - new Date(pr.created_at!).getTime();
           return duration > acc.duration ? { pr, duration } : acc;
         },
         { pr: null, duration: 0 }
@@ -61,9 +61,9 @@ export class GitHubService {
         average_closed_duration_ms: avgClosedDuration,
         longest_open_pr: longestOpen.pr
           ? {
-              title: longestOpen.pr.title,
+              title: longestOpen.pr.title ?? '',
               author: longestOpen.pr.user?.login ?? null,
-              created_at: longestOpen.pr.created_at,
+              created_at: longestOpen.pr.created_at!,
               duration_open_ms: longestOpen.duration,
             }
           : null,
@@ -71,11 +71,46 @@ export class GitHubService {
   
       res.json(response);
     } catch (error: any) {
-      console.error('Error fetching PR timing metrics:', error.message);
+      console.error('Error fetching PR timing metrics:', error.message ?? error);
       res.status(500).json({ message: 'Failed to fetch PR timing metrics' });
     }
   }
+
+
+  static async getOpenPRs(
+    req: Request<PRRequestParams>,
+    res: Response<OpenPR[] | { message: string }>
+  ) {
+    const { owner, repo } = req.params;
   
+    const accessToken = (req.user as any)?.accessToken;
+    if (!accessToken) {
+      return res.status(401).json({ message: 'Access token not found' });
+    }
+  
+    const octokit = new Octokit({ auth: accessToken });
+  
+    try {
+      const { data } = await octokit.pulls.list({
+        owner,
+        repo,
+        state: 'open',
+        per_page: 100,
+      });
+  
+      const result: OpenPR[] = data.map(pr => ({
+        title: pr.title ?? '',
+        author: pr.user?.login ?? null,
+        created_at: pr.created_at ?? '',
+        status: pr.draft ? 'draft' : 'open',
+      }));
+  
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error fetching open PRs:', error.message ?? error);
+      res.status(500).json({ message: 'Failed to fetch open PRs' });
+    }
+} 
   
   static async getDeveloperAnalytics(
     req: Request<{ owner: string; repo: string; username: string }>,
