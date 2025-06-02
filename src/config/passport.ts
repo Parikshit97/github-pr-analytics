@@ -1,6 +1,9 @@
 import passport, { Profile } from "passport";
 import { Strategy as GitHubStrategy } from "passport-github2";
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 passport.serializeUser((user, done) => {
   done(null, user);
 });
