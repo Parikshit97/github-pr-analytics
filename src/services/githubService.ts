@@ -76,30 +76,44 @@ export class GitHubService {
     }
   }
   
+  
   static async getDeveloperAnalytics(
-    req: Request<PRRequestParams & { username: string }>, 
+    req: Request<{ owner: string; repo: string; username: string }>,
     res: Response<{ total_prs: number; success_rate: string; avg_merge_time_ms: number } | { message: string }>
   ) {
     const { owner, repo, username } = req.params;
-  
+
+    const accessToken = (req.user as any)?.accessToken;
+
+    if (!accessToken) {
+      return res.status(401).json({ message: "Access token not found" });
+    }
+
+    const octokit = new Octokit({ auth: accessToken });
+
     try {
-      const { data } = await this.octokit.pulls.list({ owner, repo, state: 'all', per_page: 100 });
-  
+      const { data } = await octokit.pulls.list({
+        owner,
+        repo,
+        state: 'all',
+        per_page: 100,
+      });
+
       const devPRs = data.filter(pr => pr.user?.login === username);
-  
+
       if (devPRs.length === 0) {
         return res.status(404).json({ message: `No PRs found for developer ${username}` });
       }
-  
+
       const mergedPRs = devPRs.filter(pr => pr.merged_at !== null);
-  
+
       const avgMergeTimeMs = mergedPRs.length
         ? mergedPRs.reduce((acc, pr) => acc + (new Date(pr.merged_at!).getTime() - new Date(pr.created_at).getTime()), 0) / mergedPRs.length
         : 0;
-  
+
       return res.json({
         total_prs: devPRs.length,
-        success_rate: devPRs.length ? (mergedPRs.length / devPRs.length).toFixed(2) : '0',
+        success_rate: (mergedPRs.length / devPRs.length).toFixed(2),
         avg_merge_time_ms: Math.round(avgMergeTimeMs),
       });
     } catch (error: any) {
