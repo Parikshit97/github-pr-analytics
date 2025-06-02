@@ -43,8 +43,14 @@ const router = express.Router({ mergeParams: true });
 // Instead of passing the method reference directly,
 // use an arrow function wrapper to handle typing properly.
 
-router.get('/:username/analytics', (req, res, next) => {
+router.get('/:username/analytics', (req, res, next) : any => {
     const params = req.params as unknown as DeveloperAnalyticsParams;
+
+    const accessToken = (req.user as any)?.accessToken;
+
+    if (!accessToken) {
+        return res.status(401).json({ message: "Access token not found" });
+    }
   
     const typedReq = Object.assign(req, { params });
   
