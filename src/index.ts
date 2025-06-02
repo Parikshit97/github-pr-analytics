@@ -32,15 +32,15 @@ app.get('/', ensureAuthenticated, (req, res) => {
   res.send(`Welcome, 'GitHub User'}!`);
 });
 
+app.use('/docs', ensureAuthenticated, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+
 // 👇 Mount authentication routes
 app.use(authRoutes);
 
 // 👇 Protected API routes
 app.use('/repos/:owner/:repo/prs', ensureAuthenticated, prRoutes);
 app.use('/repos/:owner/:repo/dev', ensureAuthenticated, developerRoutes);
-
-// 👇 Protected Swagger Docs
-app.use('/docs', ensureAuthenticated, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
