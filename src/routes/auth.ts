@@ -10,7 +10,7 @@ router.get('/auth/github', passport.authenticate('github', { scope: ['user:email
 router.get('/auth/github/callback',
   passport.authenticate('github', {
     failureRedirect: '/auth/github/failure',
-    successRedirect: '/', // After successful login
+    successRedirect: '/doc', // After successful login
   })
 );
 
