@@ -1,26 +1,22 @@
-import express from "express";
-import passport from "passport";
+import express from 'express';
+import passport from 'passport';
 
 const router = express.Router();
 
-// Redirect to GitHub for login
-router.get('/github', passport.authenticate('github', { scope: ['user:email', 'repo'] }));
+// Start GitHub login
+router.get('/auth/github', passport.authenticate('github', { scope: ['user:email'] }));
 
-// GitHub redirects here after auth
-router.get('/github/callback', 
-  passport.authenticate('github', { failureRedirect: '/login' }),
-  (req, res) => {
-    // Successful auth
-    res.redirect('/profile');
-  }
+// GitHub OAuth callback
+router.get('/auth/github/callback',
+  passport.authenticate('github', {
+    failureRedirect: '/auth/github/failure',
+    successRedirect: '/', // After successful login
+  })
 );
 
-// Protected route
-router.get('/profile', (req, res) : any => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-  res.json(req.user);
+// Optional failure route
+router.get('/auth/github/failure', (req, res) => {
+  res.status(401).send('GitHub authentication failed');
 });
 
 // Logout
