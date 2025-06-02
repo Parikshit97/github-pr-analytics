@@ -1,7 +1,9 @@
 // routes/prRoutes.ts
 
 import express from 'express';
+import type { Request, Response } from 'express';
 import { PRController } from '../controllers/PRController.js'; // Update the path as needed
+import { PRRequestParams } from 'types/dto.js';
 
 const router = express.Router({ mergeParams: true });
 
@@ -40,8 +42,10 @@ const router = express.Router({ mergeParams: true });
  *                   status:
  *                     type: string
  */
-router.get('/open', PRController.getOpenPRs);
-
+router.get('/open', (req, res) : any =>
+    PRController.getOpenPRs(req as Request<PRRequestParams>, res)
+  );
+  
 /**
  * @openapi
  * /repos/{owner}/{repo}/prs/timing:
@@ -84,6 +88,10 @@ router.get('/open', PRController.getOpenPRs);
  *                     duration_open_ms:
  *                       type: number
  */
-router.get('/timing', PRController.getPRTimingMetrics);
+router.get('/timing', (req, res) : any => 
+    PRController.getPRTimingMetrics(req as Request<PRRequestParams>, res)
+  );
+  
+  
 
 export default router;
