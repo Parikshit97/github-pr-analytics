@@ -23,12 +23,14 @@ export async function ensureAuthenticated(
       return next();
     } catch (error) {
      
-      ensureSessionAuthenticated(req, res, next);
+      res.status(401).json({ message: "Invalid GitHub token" });
       return;
     }
   }
 
   // If authenticated via session, use req.user.token from Passport
+  ensureSessionAuthenticated(req, res, next);
+
   res.status(401).json({ message: "Unauthorized" });
 }
 
