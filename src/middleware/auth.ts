@@ -5,42 +5,26 @@ interface AuthenticatedRequest extends Request {
   octokit?: Octokit;
 }
 
-export async function ensureAuthenticated(
-  req: AuthenticatedRequest,
+interface SessionUser {
+  accessToken: string;
+}
+
+export function ensureAuthenticated(
+  req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> {
-  const authHeader = req.headers.authorization;
-
-  // If Bearer token exists, use that
-  if (authHeader?.startsWith("Bearer ")) {
-    const token = authHeader.slice(7);
-    const octokit = new Octokit({ auth: token });
-
-    try {
-      await octokit.users.getAuthenticated();
-      req.octokit = octokit;
+): void {
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    const user = req.user as SessionUser;
+    if (user?.accessToken) {
       return next();
-    } catch (error) {
-      res.status(401).json({ message: "Invalid GitHub token" });
+    } else {
+      res.status(401).json({ message: 'Access token not found in session user' });
       return;
     }
   }
 
-  // If authenticated via session, use req.user.token from Passport
-  if (req.isAuthenticated && req.isAuthenticated()) {
-    const user = req.user as { token?: string };
-
-    if (user?.token) {
-      req.octokit = new Octokit({ auth: user.token });
-      return next();
-    }
-
-    res.status(401).json({ message: "No GitHub token in session" });
-    return;
-  }
-
-  res.status(401).json({ message: "Unauthorized" });
+  res.status(401).json({ message: 'Unauthorized' });
 }
 
 
