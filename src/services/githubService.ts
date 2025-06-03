@@ -4,6 +4,7 @@ import { Octokit } from '@octokit/rest';
 import { Endpoints } from '@octokit/types';
 import { AuthenticatedRequest, DeveloperAnalyticsResponse, OpenPR, PRRequestParams, PRTimingMetrics } from '../types/dto.js';
 import { GitHubClient } from '../clients/GitHubClient.js';
+import { upsertPRTimingMetrics } from '../mongoCRUD.js';
 
 export class GitHubService {
 
@@ -12,12 +13,11 @@ export class GitHubService {
     res: Response<PRTimingMetrics | { message: string }>
   ) {
     const { owner, repo } = req.params;
-  
     const octokit = req.octokit;
     if (!octokit) {
       return res.status(401).json({ message: 'GitHub client not available' });
     }
-  
+
     try {
       const { data } = await octokit.pulls.list({
         owner,
@@ -25,23 +25,22 @@ export class GitHubService {
         state: 'all',
         per_page: 100,
       });
-  
+
       const now = Date.now();
-  
-      // Filter PRs with valid dates
       const openPRs = data.filter(pr => pr.state === 'open' && pr.created_at);
       const closedPRs = data.filter(pr => pr.state !== 'open' && pr.created_at && pr.closed_at);
-  
+
       const openDurations = openPRs.map(pr => now - new Date(pr.created_at!).getTime());
-  
+
       const avgClosedDuration =
         closedPRs.length > 0
           ? closedPRs.reduce(
-              (acc, pr) => acc + (new Date(pr.closed_at!).getTime() - new Date(pr.created_at!).getTime()),
+              (acc, pr) =>
+                acc + (new Date(pr.closed_at!).getTime() - new Date(pr.created_at!).getTime()),
               0
             ) / closedPRs.length
           : 0;
-  
+
       const longestOpen = openPRs.reduce<{ pr: typeof data[0] | null; duration: number }>(
         (acc, pr) => {
           const duration = now - new Date(pr.created_at!).getTime();
@@ -49,7 +48,7 @@ export class GitHubService {
         },
         { pr: null, duration: 0 }
       );
-  
+
       const response: PRTimingMetrics = {
         open_durations_ms: openDurations,
         average_closed_duration_ms: avgClosedDuration,
@@ -62,7 +61,10 @@ export class GitHubService {
             }
           : null,
       };
-  
+
+      // Save metrics to MongoDB using CRUD helper
+      await upsertPRTimingMetrics(owner, repo, response);
+
       res.json(response);
     } catch (error: any) {
       console.error('Error fetching PR timing metrics:', error.message ?? error);
