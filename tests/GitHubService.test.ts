@@ -1,7 +1,7 @@
 // tests/GitHubService.test.ts
 import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
 import type { Request, Response } from 'express';
-import { GitHubService } from '../src/services/GitHubService';
+import { GitHubService } from '../src/services/githubService';
 import { GitHubClient } from '../src/clients/GitHubClient';
 
 // Mock GitHubClient class and its getClient method
