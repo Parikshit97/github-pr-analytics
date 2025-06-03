@@ -1,5 +1,5 @@
 import express from 'express';
-import dotenv from 'dotenv';
+import dotenvFlow from 'dotenv-flow';
 import session from 'express-session';
 import passport from 'passport';
 import './config/passport.js';
@@ -12,7 +12,7 @@ import { ensureAuthenticated, ensureSessionAuthenticated } from './middleware/au
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './swagger.js';
 
-dotenv.config();
+dotenvFlow.config();
 
 const app = express();
 

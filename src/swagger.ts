@@ -1,6 +1,8 @@
 // swagger.ts
-import dotenv from 'dotenv';
-dotenv.config(); // Load .env before using process.env
+import dotenvFlow from 'dotenv-flow';
+
+// Loads .env, .env.development or .env.production automatically based on NODE_ENV
+dotenvFlow.config();
 
 import swaggerJSDoc from 'swagger-jsdoc';
 

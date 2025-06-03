@@ -5,13 +5,7 @@ import { Endpoints } from '@octokit/types';
 import { AuthenticatedRequest, DeveloperAnalyticsResponse, OpenPR, PRRequestParams, PRTimingMetrics } from '../types/dto.js';
 import { GitHubClient } from '../clients/GitHubClient.js';
 
-
-type PullRequest = Endpoints['GET /repos/{owner}/{repo}/pulls']['response']['data'][0];
-
 export class GitHubService {
-  private static octokit = new Octokit({
-    auth: process.env.GITHUB_TOKEN,
-  });
 
   static async getPRTimingMetrics(
     req: AuthenticatedRequest<PRRequestParams>,

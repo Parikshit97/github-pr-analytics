@@ -1,9 +1,10 @@
 import passport from 'passport';
 import { Strategy as GitHubStrategy } from 'passport-github2';
 import { Profile } from 'passport-github2';
-import dotenv from 'dotenv';
+import dotenvFlow from 'dotenv-flow';
 
-dotenv.config();
+// Loads .env, .env.development or .env.production automatically based on NODE_ENV
+dotenvFlow.config();
 
 interface SerializedUser {
   id: string;
