@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { Octokit } from '@octokit/rest';
 import { Endpoints } from '@octokit/types';
 import { OpenPR, PRRequestParams, PRTimingMetrics } from '../types/dto.js';
-import { GitHubClient } from 'clients/GitHubClient.js';
+import { GitHubClient } from '../clients/GitHubClient.js';
 
 
 type PullRequest = Endpoints['GET /repos/{owner}/{repo}/pulls']['response']['data'][0];
