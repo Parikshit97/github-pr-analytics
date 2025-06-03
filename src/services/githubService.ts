@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { Octokit } from '@octokit/rest';
 import { Endpoints } from '@octokit/types';
 import { OpenPR, PRRequestParams, PRTimingMetrics } from '../types/dto.js';
+import { GitHubClient } from 'clients/GitHubClient.js';
 
 
 type PullRequest = Endpoints['GET /repos/{owner}/{repo}/pulls']['response']['data'][0];
@@ -22,9 +23,9 @@ export class GitHubService {
     if (!accessToken) {
       return res.status(401).json({ message: 'Access token not found' });
     }
-  
-    const octokit = new Octokit({ auth: accessToken });
-  
+
+    const octokit = new GitHubClient(accessToken).getClient();
+    
     try {
       const { data } = await octokit.pulls.list({
         owner,
@@ -88,7 +89,7 @@ export class GitHubService {
       return res.status(401).json({ message: 'Access token not found' });
     }
   
-    const octokit = new Octokit({ auth: accessToken });
+    const octokit = new GitHubClient(accessToken).getClient();
   
     try {
       const { data } = await octokit.pulls.list({
@@ -124,7 +125,7 @@ export class GitHubService {
       return res.status(401).json({ message: "Access token not found" });
     }
 
-    const octokit = new Octokit({ auth: accessToken });
+    const octokit = new GitHubClient(accessToken).getClient();
 
     try {
       const { data } = await octokit.pulls.list({
