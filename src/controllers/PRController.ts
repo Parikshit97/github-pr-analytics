@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { GitHubService } from '../services/githubService.js';
+import { GitHubService } from '../services/GithubService.js';
 import type { PRRequestParams, OpenPRResponse, PRTimingMetricsResponse, DeveloperAnalyticsParams } from '../types/dto.js';
 
 export class PRController {
