@@ -29,14 +29,38 @@ export async function ensureAuthenticated(
   }
 
   // If authenticated via session, use req.user.token from Passport
-  ensureSessionAuthenticated(req, res, next);
+  if (req.isAuthenticated?.() && (req.user as any)?.accessToken) {
+    const accessToken = (req.user as any).accessToken;
+    req.octokit = new Octokit({ auth: accessToken });
+    return next();
+  }
 
   res.status(401).json({ message: "Unauthorized" });
 }
 
 
+// export function ensureSessionAuthenticated(
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void {
+//   if (req.isAuthenticated && req.isAuthenticated()) {
+//     const user = req.user as { accessToken?: string };
+
+//     if (user?.accessToken) {
+//       return next(); // Authenticated and token present, proceed
+//     } else {
+//       return res.redirect('/auth/github'); // Authenticated but token missing
+//     }
+//   }
+
+//   // Not authenticated at all, redirect to GitHub login
+//   return res.redirect('/auth/github');
+// }
+
+
 export function ensureSessionAuthenticated(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): void {
@@ -44,7 +68,9 @@ export function ensureSessionAuthenticated(
     const user = req.user as { accessToken?: string };
 
     if (user?.accessToken) {
-      return next(); // Authenticated and token present, proceed
+      const octokit = new Octokit({ auth: user.accessToken });
+      req.octokit = octokit;
+      return next(); // Proceed with octokit client attached
     } else {
       return res.redirect('/auth/github'); // Authenticated but token missing
     }
@@ -53,5 +79,4 @@ export function ensureSessionAuthenticated(
   // Not authenticated at all, redirect to GitHub login
   return res.redirect('/auth/github');
 }
-
 
