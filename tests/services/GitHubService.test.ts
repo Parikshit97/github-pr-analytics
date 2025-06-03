@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { GitHubService } from '../../src/services/GithubService';
+import { GitHubService } from '../../src/services/githubService';
 
 describe('GitHubService', () => {
   let mockRes: any;

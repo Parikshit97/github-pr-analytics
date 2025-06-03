@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { GitHubService } from '../services/GithubService.js';
 import type { PRRequestParams, OpenPRResponse, PRTimingMetricsResponse, DeveloperAnalyticsParams } from '../types/dto.js';
+import { GitHubService } from '../services/githubService.js';
 
 export class PRController {
   static async getOpenPRs(req: Request<PRRequestParams>, res: Response<OpenPRResponse>) {
