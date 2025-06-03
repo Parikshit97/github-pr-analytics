@@ -1,3 +1,6 @@
+import { Octokit } from "@octokit/rest";
+import { Request } from "express";
+
 // Request DTOs
 export interface PRRequestParams {
   owner: string;
@@ -38,3 +41,15 @@ export interface ErrorResponse {
 // Union types for responses allowing either success or error
 export type OpenPRResponse = OpenPR[] | ErrorResponse;
 export type PRTimingMetricsResponse = PRTimingMetrics | ErrorResponse;
+
+export interface AuthenticatedRequest<P = any> extends Request<P> {
+  octokit?: Octokit;
+  user?: { accessToken?: string };
+}
+
+export interface DeveloperAnalyticsResponse {
+  total_prs: number;
+  success_rate: string;
+  avg_merge_time_ms: number;
+}
+

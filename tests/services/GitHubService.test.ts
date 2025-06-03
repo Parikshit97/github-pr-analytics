@@ -1,114 +1,97 @@
-// tests/GitHubService.test.ts
-import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
-import type { Request, Response } from 'express';
-import { GitHubService } from '../../src/services/githubService';
-import { GitHubClient } from '../../src/clients/GitHubClient';
-
-// Mock GitHubClient class and its getClient method
-vi.mock('../../src/clients/GitHubClient', () => {
-  return {
-    GitHubClient: vi.fn().mockImplementation(() => ({
-      getClient: vi.fn(),
-    })),
-  };
-});
-
-beforeAll(() => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-  });
-  
-  afterAll(() => {
-    (console.error as any).mockRestore();
-  });
-  
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { GitHubService } from '../../src/services/GitHubService';
 
 describe('GitHubService', () => {
-  let mockRes: Partial<Response>;
-  let mockJson: ReturnType<typeof vi.fn>;
-  let mockStatus: ReturnType<typeof vi.fn>;
+  let mockRes: any;
+  let mockJson: any;
+  let mockStatus: any;
 
   beforeEach(() => {
     mockJson = vi.fn();
     mockStatus = vi.fn(() => ({ json: mockJson }));
     mockRes = {
-      json: mockJson,
       status: mockStatus,
+      json: mockJson,
     };
+
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2025-06-01T12:00:00Z').getTime());
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
     vi.clearAllMocks();
   });
 
   describe('getPRTimingMetrics', () => {
-    it('returns 401 if access token is missing', async () => {
+    it('should return timing metrics correctly', async () => {
+      const now = Date.now();
+      const prData = [
+        { state: 'open', created_at: '2025-05-30T12:00:00Z' },
+        { state: 'open', created_at: '2025-05-31T12:00:00Z' },
+        { state: 'closed', created_at: '2025-05-20T12:00:00Z', closed_at: '2025-05-25T12:00:00Z' },
+        { state: 'closed', created_at: '2025-05-21T12:00:00Z', closed_at: '2025-05-26T12:00:00Z' },
+      ];
+
       const mockReq = {
         params: { owner: 'owner', repo: 'repo' },
-        user: {},
-      } as unknown as Request<{ owner: string; repo: string }, any, any>;
+        octokit: {
+          pulls: {
+            list: vi.fn().mockResolvedValue({ data: prData }),
+          },
+        },
+      };
 
-      await GitHubService.getPRTimingMetrics(mockReq, mockRes as Response);
+      await GitHubService.getPRTimingMetrics(mockReq as any, mockRes);
+
+      // Expected open durations: now - created_at for each open pr
+      const expectedOpenDurations = prData
+        .filter(pr => pr.state === 'open')
+        .map(pr => now - new Date(pr.created_at).getTime());
+
+      // Average closed duration:
+      const closedDurations = prData
+        .filter(pr => pr.state !== 'open')
+        .map(pr => new Date(pr.closed_at!).getTime() - new Date(pr.created_at).getTime());
+      const avgClosed = closedDurations.reduce((a, b) => a + b, 0) / closedDurations.length;
+
+      // Longest open PR is the one with max duration
+      const longest = prData
+        .filter(pr => pr.state === 'open')
+        .reduce(
+          (acc, pr) => {
+            const duration = now - new Date(pr.created_at).getTime();
+            return duration > acc.duration ? { pr, duration } : acc;
+          },
+          { pr: null as any, duration: 0 }
+        );
+
+      expect(mockRes.json).toHaveBeenCalledWith({
+        open_durations_ms: expectedOpenDurations,
+        average_closed_duration_ms: avgClosed,
+        longest_open_pr: {
+          title: longest.pr.title ?? '',
+          author: longest.pr.user?.login ?? null,
+          created_at: longest.pr.created_at,
+          duration_open_ms: longest.duration,
+        },
+      });
+    });
+
+    it('should respond 401 if octokit missing', async () => {
+      const mockReq = { params: { owner: 'o', repo: 'r' } };
+      await GitHubService.getPRTimingMetrics(mockReq as any, mockRes);
 
       expect(mockStatus).toHaveBeenCalledWith(401);
-      expect(mockJson).toHaveBeenCalledWith({ message: 'Access token not found' });
+      expect(mockJson).toHaveBeenCalledWith({ message: 'GitHub client not available' });
     });
 
-    it('returns PR timing metrics on success', async () => {
+    it('should respond 500 on error', async () => {
       const mockReq = {
-        params: { owner: 'owner', repo: 'repo' },
-        user: { accessToken: 'token' },
-      } as unknown as Request<{ owner: string; repo: string }, any, any>;
-
-      const mockPullsList = vi.fn().mockResolvedValue({
-        data: [
-          {
-            state: 'open',
-            created_at: new Date(Date.now() - 10000).toISOString(),
-            closed_at: null,
-            title: 'Open PR',
-            user: { login: 'user1' },
-            draft: false,
-          },
-          {
-            state: 'closed',
-            created_at: new Date(Date.now() - 20000).toISOString(),
-            closed_at: new Date(Date.now() - 10000).toISOString(),
-            title: 'Closed PR',
-            user: { login: 'user2' },
-            draft: false,
-          },
-        ],
-      });
-
-      // @ts-ignore - we assert GitHubClient mock instance's getClient returns this object
-      (GitHubClient as unknown as vi.Mock).mockImplementation(() => ({
-        getClient: () => ({
-          pulls: { list: mockPullsList },
-        }),
-      }));
-
-      await GitHubService.getPRTimingMetrics(mockReq, mockRes as Response);
-
-      expect(mockJson).toHaveBeenCalled();
-      const responseArg = mockJson.mock.calls[0][0];
-      expect(responseArg.open_durations_ms).toHaveLength(1);
-      expect(typeof responseArg.average_closed_duration_ms).toBe('number');
-      expect(responseArg.longest_open_pr).not.toBeNull();
-    });
-
-    it('returns 500 on error', async () => {
-      const mockReq = {
-        params: { owner: 'owner', repo: 'repo' },
-        user: { accessToken: 'token' },
-      } as unknown as Request<{ owner: string; repo: string }, any, any>;
-
-      const mockPullsList = vi.fn().mockRejectedValue(new Error('Failed'));
-
-      // @ts-ignore
-      (GitHubClient as unknown as vi.Mock).mockImplementation(() => ({
-        getClient: () => ({
-          pulls: { list: mockPullsList },
-        }),
-      }));
-
-      await GitHubService.getPRTimingMetrics(mockReq, mockRes as Response);
+        params: { owner: 'o', repo: 'r' },
+        octokit: { pulls: { list: vi.fn().mockRejectedValue(new Error('fail')) } },
+      };
+      await GitHubService.getPRTimingMetrics(mockReq as any, mockRes);
 
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({ message: 'Failed to fetch PR timing metrics' });
@@ -116,72 +99,49 @@ describe('GitHubService', () => {
   });
 
   describe('getOpenPRs', () => {
-    it('returns 401 if access token missing', async () => {
+    it('should return open PRs list', async () => {
+      const prData = [
+        {
+          title: 'PR 1',
+          user: { login: 'user1' },
+          created_at: '2025-05-30T12:00:00Z',
+          draft: false,
+        },
+        {
+          title: 'PR 2',
+          user: { login: 'user2' },
+          created_at: '2025-05-31T12:00:00Z',
+          draft: true,
+        },
+      ];
+
       const mockReq = {
-        params: { owner: 'owner', repo: 'repo' },
-        user: {},
-      } as unknown as Request<{ owner: string; repo: string }, any, any>;
+        params: { owner: 'o', repo: 'r' },
+        octokit: { pulls: { list: vi.fn().mockResolvedValue({ data: prData }) } },
+      };
 
-      await GitHubService.getOpenPRs(mockReq, mockRes as Response);
-
-      expect(mockStatus).toHaveBeenCalledWith(401);
-      expect(mockJson).toHaveBeenCalledWith({ message: 'Access token not found' });
-    });
-
-    it('returns open PRs on success', async () => {
-      const mockReq = {
-        params: { owner: 'owner', repo: 'repo' },
-        user: { accessToken: 'token' },
-      } as unknown as Request<{ owner: string; repo: string }, any, any>;
-
-      const mockPullsList = vi.fn().mockResolvedValue({
-        data: [
-          {
-            title: 'PR1',
-            user: { login: 'user1' },
-            created_at: new Date().toISOString(),
-            draft: false,
-          },
-          {
-            title: 'PR2',
-            user: { login: 'user2' },
-            created_at: new Date().toISOString(),
-            draft: true,
-          },
-        ],
-      });
-
-      // @ts-ignore
-      (GitHubClient as unknown as vi.Mock).mockImplementation(() => ({
-        getClient: () => ({
-          pulls: { list: mockPullsList },
-        }),
-      }));
-
-      await GitHubService.getOpenPRs(mockReq, mockRes as Response);
+      await GitHubService.getOpenPRs(mockReq as any, mockRes);
 
       expect(mockJson).toHaveBeenCalledWith([
-        { title: 'PR1', author: 'user1', created_at: expect.any(String), status: 'open' },
-        { title: 'PR2', author: 'user2', created_at: expect.any(String), status: 'draft' },
+        { title: 'PR 1', author: 'user1', created_at: '2025-05-30T12:00:00Z', status: 'open' },
+        { title: 'PR 2', author: 'user2', created_at: '2025-05-31T12:00:00Z', status: 'draft' },
       ]);
     });
 
-    it('returns 500 on error', async () => {
+    it('should respond 401 if octokit missing', async () => {
+      const mockReq = { params: { owner: 'o', repo: 'r' } };
+      await GitHubService.getOpenPRs(mockReq as any, mockRes);
+
+      expect(mockStatus).toHaveBeenCalledWith(401);
+      expect(mockJson).toHaveBeenCalledWith({ message: 'GitHub client not available' });
+    });
+
+    it('should respond 500 on error', async () => {
       const mockReq = {
-        params: { owner: 'owner', repo: 'repo' },
-        user: { accessToken: 'token' },
-      } as unknown as Request<{ owner: string; repo: string }, any, any>;
-
-      const mockPullsList = vi.fn().mockRejectedValue(new Error('Error fetching'));
-
-      // @ts-ignore
-      (GitHubClient as unknown as vi.Mock).mockImplementation(() => ({
-        getClient: () => ({
-          pulls: { list: mockPullsList },
-        }),
-      }));
-
-      await GitHubService.getOpenPRs(mockReq, mockRes as Response);
+        params: { owner: 'o', repo: 'r' },
+        octokit: { pulls: { list: vi.fn().mockRejectedValue(new Error('fail')) } },
+      };
+      await GitHubService.getOpenPRs(mockReq as any, mockRes);
 
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({ message: 'Failed to fetch open PRs' });
@@ -189,104 +149,58 @@ describe('GitHubService', () => {
   });
 
   describe('getDeveloperAnalytics', () => {
-    it('returns 401 if access token missing', async () => {
-      const mockReq = {
-        params: { owner: 'owner', repo: 'repo', username: 'user' },
-        user: {},
-      } as unknown as Request<{ owner: string; repo: string; username: string }, any, any>;
-
-      await GitHubService.getDeveloperAnalytics(mockReq, mockRes as Response);
-
-      expect(mockStatus).toHaveBeenCalledWith(401);
-      expect(mockJson).toHaveBeenCalledWith({ message: 'Access token not found' });
-    });
-
-    it('returns 404 if no PRs found for user', async () => {
-      const mockReq = {
-        params: { owner: 'owner', repo: 'repo', username: 'user' },
-        user: { accessToken: 'token' },
-      } as unknown as Request<{ owner: string; repo: string; username: string }, any, any>;
-
-      const mockPullsList = vi.fn().mockResolvedValue({
-        data: [],
-      });
-
-      // @ts-ignore
-      (GitHubClient as unknown as vi.Mock).mockImplementation(() => ({
-        getClient: () => ({
-          pulls: { list: mockPullsList },
-        }),
-      }));
-
-      await GitHubService.getDeveloperAnalytics(mockReq, mockRes as Response);
-
-      expect(mockStatus).toHaveBeenCalledWith(404);
-      expect(mockJson).toHaveBeenCalledWith({ message: 'No PRs found for developer user' });
-    });
-
-    it('returns analytics data on success', async () => {
-      const now = Date.now();
-      const createdAt1 = new Date(now - 30000).toISOString();
-      const mergedAt1 = new Date(now - 10000).toISOString();
-      const createdAt2 = new Date(now - 60000).toISOString();
+    it('should return developer analytics', async () => {
+      const prData = [
+        { user: { login: 'dev1' }, created_at: '2025-05-01T00:00:00Z', merged_at: '2025-05-02T00:00:00Z' },
+        { user: { login: 'dev1' }, created_at: '2025-05-03T00:00:00Z', merged_at: null },
+        { user: { login: 'dev2' }, created_at: '2025-05-04T00:00:00Z', merged_at: '2025-05-05T00:00:00Z' },
+      ];
 
       const mockReq = {
-        params: { owner: 'owner', repo: 'repo', username: 'user' },
-        user: { accessToken: 'token' },
-      } as unknown as Request<{ owner: string; repo: string; username: string }, any, any>;
+        params: { owner: 'o', repo: 'r', username: 'dev1' },
+        octokit: { pulls: { list: vi.fn().mockResolvedValue({ data: prData }) } },
+      };
 
-      const mockPullsList = vi.fn().mockResolvedValue({
-        data: [
-          {
-            user: { login: 'user' },
-            created_at: createdAt1,
-            merged_at: mergedAt1,
-          },
-          {
-            user: { login: 'user' },
-            created_at: createdAt2,
-            merged_at: null,
-          },
-          {
-            user: { login: 'other' },
-            created_at: createdAt1,
-            merged_at: mergedAt1,
-          },
-        ],
-      });
+      await GitHubService.getDeveloperAnalytics(mockReq as any, mockRes);
 
-      // @ts-ignore
-      (GitHubClient as unknown as vi.Mock).mockImplementation(() => ({
-        getClient: () => ({
-          pulls: { list: mockPullsList },
-        }),
-      }));
-
-      await GitHubService.getDeveloperAnalytics(mockReq, mockRes as Response);
-
+      // dev1 PRs: 2 total, 1 merged, avg merge time = 1 day in ms
       expect(mockJson).toHaveBeenCalledWith({
         total_prs: 2,
         success_rate: '0.50',
-        avg_merge_time_ms: Math.round(new Date(mergedAt1).getTime() - new Date(createdAt1).getTime()),
+        avg_merge_time_ms: 24 * 60 * 60 * 1000,
       });
     });
 
-    it('returns 500 on error', async () => {
+    it('should return 404 if no PRs found for developer', async () => {
+      const prData = [
+        { user: { login: 'dev2' }, created_at: '2025-05-01T00:00:00Z', merged_at: '2025-05-02T00:00:00Z' },
+      ];
+
       const mockReq = {
-        params: { owner: 'owner', repo: 'repo', username: 'user' },
-        user: { accessToken: 'token' },
-      } as unknown as Request<{ owner: string; repo: string; username: string }, any, any>;
+        params: { owner: 'o', repo: 'r', username: 'dev1' },
+        octokit: { pulls: { list: vi.fn().mockResolvedValue({ data: prData }) } },
+      };
 
-      const mockPullsList = vi.fn().mockRejectedValue(new Error('Failed'));
+      await GitHubService.getDeveloperAnalytics(mockReq as any, mockRes);
 
-      // @ts-ignore
-      (GitHubClient as unknown as vi.Mock).mockImplementation(() => ({
-        getClient: () => ({
-          pulls: { list: mockPullsList },
-        }),
-      }));
+      expect(mockStatus).toHaveBeenCalledWith(404);
+      expect(mockJson).toHaveBeenCalledWith({ message: 'No PRs found for developer dev1' });
+    });
 
-      await GitHubService.getDeveloperAnalytics(mockReq, mockRes as Response);
+    it('should respond 401 if octokit missing', async () => {
+      const mockReq = { params: { owner: 'o', repo: 'r', username: 'dev' } };
+      await GitHubService.getDeveloperAnalytics(mockReq as any, mockRes);
+
+      expect(mockStatus).toHaveBeenCalledWith(401);
+      expect(mockJson).toHaveBeenCalledWith({ message: 'GitHub client not available' });
+    });
+
+    it('should respond 500 on error', async () => {
+      const mockReq = {
+        params: { owner: 'o', repo: 'r', username: 'dev' },
+        octokit: { pulls: { list: vi.fn().mockRejectedValue(new Error('fail')) } },
+      };
+      await GitHubService.getDeveloperAnalytics(mockReq as any, mockRes);
 
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({ message: 'Failed to fetch developer analytics' });

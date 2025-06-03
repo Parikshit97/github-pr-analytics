@@ -45,12 +45,6 @@ const router = express.Router({ mergeParams: true });
 
 router.get('/:username/analytics', (req, res, next) : any => {
     const params = req.params as unknown as DeveloperAnalyticsParams;
-
-    const accessToken = (req.user as any)?.accessToken;
-
-    if (!accessToken) {
-        return res.status(401).json({ message: "Access token not found" });
-    }
   
     const typedReq = Object.assign(req, { params });
   
