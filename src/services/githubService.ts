@@ -4,7 +4,7 @@ import { Octokit } from '@octokit/rest';
 import { Endpoints } from '@octokit/types';
 import { AuthenticatedRequest, DeveloperAnalyticsResponse, OpenPR, PRRequestParams, PRTimingMetrics } from '../types/dto.js';
 import { GitHubClient } from '../clients/GitHubClient.js';
-import { upsertPRTimingMetrics } from '../mongoCRUD.js';
+import { logUserRequest } from '../mongoCRUD.js';
 
 export class GitHubService {
 
@@ -63,7 +63,15 @@ export class GitHubService {
       };
 
       // Save metrics to MongoDB using CRUD helper
-      await upsertPRTimingMetrics(owner, repo, response);
+      await logUserRequest({
+        userId: 'someUserIdString',
+        owner,
+        repo,
+        endpoint: 'getOpenPRs',
+        requestedAt: new Date(),
+        status: 'success',
+        responseTimeMs: Date.now()
+      });
 
       res.json(response);
     } catch (error: any) {
