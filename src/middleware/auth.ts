@@ -12,7 +12,7 @@ export async function ensureAuthenticated(
 ): Promise<void> {
   const authHeader = req.headers.authorization;
 
-  // 1. If Bearer token present, validate GitHub OAuth token
+  // If Bearer token exists, use that
   if (authHeader?.startsWith("Bearer ")) {
     const token = authHeader.slice(7);
     const octokit = new Octokit({ auth: token });
@@ -22,20 +22,27 @@ export async function ensureAuthenticated(
       req.octokit = octokit;
       return next();
     } catch (error) {
-      // Invalid token, respond with 401 and don't proceed
-      res.status(401).json({ error: "Invalid GitHub token" });
+      res.status(401).json({ message: "Invalid GitHub token" });
       return;
     }
   }
 
-  // 2. If session auth exists and is authenticated, allow access
-  if (typeof req.isAuthenticated === "function" && req.isAuthenticated()) {
-    return next();
+  // If authenticated via session, use req.user.token from Passport
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    const user = req.user as { token?: string };
+
+    if (user?.token) {
+      req.octokit = new Octokit({ auth: user.token });
+      return next();
+    }
+
+    res.status(401).json({ message: "No GitHub token in session" });
+    return;
   }
 
-  // 3. Otherwise, unauthorized
-  res.status(401).json({ error: "Unauthorized" });
+  res.status(401).json({ message: "Unauthorized" });
 }
+
 
 export function ensureSessionAuthenticated(
   req: Request,
