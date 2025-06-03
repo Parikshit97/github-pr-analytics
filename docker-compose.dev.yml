@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   github-pr-analytics:
-    build: .
+    build : .
+    env_file:
+      - .env.development
     ports:
       - "3000:3000"
-    env_file:
-      - .env
