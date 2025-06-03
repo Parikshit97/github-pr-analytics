@@ -7,7 +7,7 @@ import './config/passport.js';
 import prRoutes from './routes/prRoutes.js';
 import developerRoutes from './routes/developerRoutes.js';
 import authRoutes from './routes/auth.js';
-import { ensureAuthenticated } from './middleware/auth.js';
+import { ensureAuthenticated, ensureSessionAuthenticated } from './middleware/auth.js';
 
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './swagger.js';
@@ -28,11 +28,11 @@ app.use(passport.session());
 const port = process.env.PORT || 3000;
 
 // 👇 Redirect root to login if not authenticated
-app.get('/', ensureAuthenticated, (req, res) => {
+app.get('/', ensureSessionAuthenticated, (req, res) => {
   res.send(`Welcome, 'GitHub User'}!`);
 });
 
-app.use('/docs', ensureAuthenticated, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/docs', ensureSessionAuthenticated, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
 // 👇 Mount authentication routes
