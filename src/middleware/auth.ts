@@ -22,24 +22,13 @@ export async function ensureAuthenticated(
       req.octokit = octokit;
       return next();
     } catch (error) {
-      res.status(401).json({ message: "Invalid GitHub token" });
+     
+      ensureSessionAuthenticated(req, res, next);
       return;
     }
   }
 
   // If authenticated via session, use req.user.token from Passport
-  if (req.isAuthenticated && req.isAuthenticated()) {
-    const user = req.user as { token?: string };
-
-    if (user?.token) {
-      req.octokit = new Octokit({ auth: user.token });
-      return next();
-    }
-
-    res.status(401).json({ message: "No GitHub token in session" });
-    return;
-  }
-
   res.status(401).json({ message: "Unauthorized" });
 }
 
