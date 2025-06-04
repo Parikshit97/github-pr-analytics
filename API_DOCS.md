@@ -126,7 +126,7 @@ curl -X 'GET' \
 
 ### 📌 Get Developer PR Stats
 
-**GET** `/repos/:owner/:repo/prs/developer/:developerId`
+**GET** `/repos/:owner/:repo/dev/:username/analytics`
 
 Returns PR analytics for a specific developer in a repo:
 - Total number of PRs
@@ -147,17 +147,15 @@ curl --location 'https://github-pr-analytics.onrender.com/repos/Parikshit97/aler
 | ------------- | ------ | ------------------------------- |
 | `owner`       | string | GitHub repository owner         |
 | `repo`        | string | GitHub repository name          |
-| `developerId` | string | GitHub username of the developer|
+| `username`    | string | GitHub username of the developer|
 
 #### ✅ Example Response
 
 ```json
 {
-  "developer": "devUser",
-  "total_prs": 10,
-  "merged_prs": 8,
-  "success_rate": 0.8,
-  "average_merge_time_ms": 432000
+    "total_prs": 13,
+    "success_rate": "0.92",
+    "avg_merge_time_ms": 5250
 }
 ```
 
@@ -173,11 +171,11 @@ curl --location 'https://github-pr-analytics.onrender.com/repos/Parikshit97/aler
 
 ## 📦 Notes
 
-- All endpoints require authentication via GitHub OAuth.
+- All endpoints require authentication via **GitHub Personal Access Token**, if accessed via Postman.
+- If accessed via Browser, requires authentication using **GitHub**
 - MongoDB Atlas is used to log and persist requests and analytics data.
 - The project is deployed as a Docker container on [Render](https://render.com).
 
 ---
 
-For more information, visit the [project repository](https://github.com/<your-username>/github-pr-analytics).
 
