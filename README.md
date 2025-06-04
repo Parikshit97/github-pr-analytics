@@ -53,7 +53,7 @@ GitHub PR Analytics is a backend service that provides analytics for GitHub pull
 
 ### 1. Clone the repo
 ```bash
-git clone https://github.com/<your-username>/github-pr-analytics.git
+git clone git@github.com:Parikshit97/github-pr-analytics.git
 cd github-pr-analytics
 ```
 
@@ -67,7 +67,7 @@ npm install
 NODE_ENV=development NODE_CONFIG_DIR=./src/config npm run dev
 ```
 
-> Ensure `src/config/development.json` is configured correctly.
+> Ensure `src/config/development.json` is configured correctly and mongodb running locally.
 
 ### 4. Using Docker Compose
 ```bash
