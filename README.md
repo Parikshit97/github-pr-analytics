@@ -60,9 +60,6 @@ NODE_ENV=development NODE_CONFIG_DIR=./src/config npm run dev
 ```bash
 docker-compose up --build
 ```
-
-> It uses `.env.development` by default.
-
 ---
 
 ## 🌐 Production Deployment (Render)
