@@ -9,8 +9,7 @@ It helps track:
 - Developer-specific PR metrics (total PRs, merge success rate, average merge time)
 - Timing metrics for PRs (average open duration, longest open PR)
 
-Authentication is handled via **GitHub OAuth**.
-
+Authentication is handled via **GitHub OAuth** or **Personal Access Token** (for tools like Postman).
 ---
 
 ## 🌐 Base URL
@@ -19,19 +18,7 @@ Authentication is handled via **GitHub OAuth**.
 https://github-pr-analytics.onrender.com/
 ```
 
-> For local development, use `http://localhost:3000/`
-
----
-
-## 🔐 Authentication
-
-All endpoints require a valid GitHub login session. Users must authenticate through the GitHub OAuth flow provided at:
-
-```
-GET /auth/github
-```
-
-Upon success, a session cookie is maintained to allow API access.
+> For local development, use `http://localhost:3000/` (using Postman)
 
 ---
 
@@ -51,6 +38,17 @@ Returns a list of open PRs for the specified GitHub repository.
 | --------- | ------ | -------------------------- |
 | `owner`   | string | GitHub repository owner     |
 | `repo`    | string | GitHub repository name      |
+
+### Curl for Postman Request
+
+```
+curl -X 'GET' \
+  'https://github-pr-analytics.onrender.com/repos/Parikshit97/alertmonitor/prs/open' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer <your-github-token>'
+
+  ```
+
 
 #### ✅ Example Response
 
