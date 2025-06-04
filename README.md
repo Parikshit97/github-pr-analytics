@@ -31,7 +31,6 @@ GitHub PR Analytics is a backend service that provides analytics for GitHub pull
 ├── dist/                    # Compiled output
 ├── docker-compose.yml       # Docker config for dev/prod
 ├── Dockerfile
-├── .env.*                   # Optional local env files
 └── README.md
 ```
 
