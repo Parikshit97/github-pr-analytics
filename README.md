@@ -90,10 +90,21 @@ docker-compose up --build
 
 ---
 
-## 🧪 Testing
+## ✅ Test Strategy
+
+This project uses **[Vitest](https://vitest.dev/)** for unit testing and mocking.
+
+- All service methods are covered with unit tests using mock responses for the GitHub API via the Octokit client.
+- MongoDB operations are mocked to prevent side effects or the need for a live database during test runs.
+- Tests validate both successful API flows and error-handling branches.
+
+To run tests locally:
 
 ```bash
 npm test
 ```
+
+> 📂 Test files are located under the `tests/` directory and follow the `*.test.ts` naming convention.
+
 
 ---
