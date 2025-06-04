@@ -2,6 +2,9 @@
 
 GitHub PR Analytics is a backend service that provides analytics for GitHub pull requests, such as open durations, average merge time, and longest open PRs. It is built with Node.js, TypeScript, Express, and MongoDB, and can be run using Docker or deployed to platforms like Render.
 
+🌐 **Live URL:** [https://github-pr-analytics.onrender.com](https://github-pr-analytics.onrender.com)  
+> Requires GitHub login for access.
+
 ---
 
 ## 🚀 Features
