@@ -1,8 +1,8 @@
 // swagger.ts
-import dotenvFlow from 'dotenv-flow';
+import config from 'config';
 
-// Loads .env, .env.development or .env.production automatically based on NODE_ENV
-dotenvFlow.config();
+// Server
+const BASE_URL = config.get<string>('server.baseUrl');
 
 import swaggerJSDoc from 'swagger-jsdoc';
 
@@ -15,7 +15,7 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: process.env.BASE_URL ||  'http://localhost:3000',
+      url: BASE_URL,
       description: 'Local server',
     },
   ],

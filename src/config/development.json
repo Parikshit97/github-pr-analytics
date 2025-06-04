@@ -1,0 +1,12 @@
+{
+    "server": {
+      "baseUrl": "http://localhost:3000"
+    },
+    "mongodb": {
+      "uri": "mongodb://mongo:27017/github_analytics"
+    },
+    "github": {
+      "callbackUrl": "http://localhost:3000/auth/github/callback"
+    }
+  }
+  

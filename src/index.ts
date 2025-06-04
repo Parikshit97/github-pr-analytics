@@ -1,5 +1,4 @@
 import express from 'express';
-import dotenvFlow from 'dotenv-flow';
 import session from 'express-session';
 import passport from 'passport';
 import './config/passport.js';
@@ -12,12 +11,16 @@ import { ensureAuthenticated, ensureSessionAuthenticated } from './middleware/au
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './swagger.js';
 
-dotenvFlow.config();
+import config from 'config';
 
+const PORT = config.get<number>('server.port');
+
+
+const GITHUB_CLIENT_SECRET = config.get<string>('github.clientSecret');
 const app = express();
 
 app.use(session({
-  secret: process.env.SESSION_SECRET!,
+  secret: GITHUB_CLIENT_SECRET,
   resave: false,
   saveUninitialized: false
 }));
@@ -25,9 +28,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-const port = process.env.PORT || 3000;
 
-// 👇 Redirect root to login if not authenticated
 app.get('/', ensureSessionAuthenticated, (req, res) => {
   res.send(`Welcome, 'GitHub User'}!`);
 });
@@ -35,13 +36,11 @@ app.get('/', ensureSessionAuthenticated, (req, res) => {
 app.use('/docs', ensureSessionAuthenticated, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
-// 👇 Mount authentication routes
 app.use(authRoutes);
 
-// 👇 Protected API routes
 app.use('/repos/:owner/:repo/prs', ensureAuthenticated, prRoutes);
 app.use('/repos/:owner/:repo/dev', ensureAuthenticated, developerRoutes);
 
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });

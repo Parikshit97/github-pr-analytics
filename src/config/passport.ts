@@ -1,10 +1,11 @@
 import passport from 'passport';
 import { Strategy as GitHubStrategy } from 'passport-github2';
 import { Profile } from 'passport-github2';
-import dotenvFlow from 'dotenv-flow';
+import config from 'config';
 
-// Loads .env, .env.development or .env.production automatically based on NODE_ENV
-dotenvFlow.config();
+const GITHUB_CLIENT_ID = config.get<string>('github.clientId');
+const GITHUB_CLIENT_SECRET = config.get<string>('github.clientSecret');
+const GITHUB_CALLBACK_URL = config.get<string>('github.callbackUrl');
 
 interface SerializedUser {
   id: string;
@@ -24,9 +25,9 @@ passport.serializeUser((user: Express.User, done) => {
 passport.use(
   new GitHubStrategy(
     {
-      clientID: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-      callbackURL: process.env.GITHUB_CALLBACK_URL!
+      clientID: GITHUB_CLIENT_ID,
+      clientSecret: GITHUB_CLIENT_SECRET,
+      callbackURL: GITHUB_CALLBACK_URL
     },
     (
       accessToken: string,

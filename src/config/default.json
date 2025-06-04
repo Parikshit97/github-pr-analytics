@@ -1,0 +1,18 @@
+{
+    "server": {
+      "port": 3000,
+      "baseUrl": "http://localhost:3000"
+    },
+    "github": {
+      "clientId": "Ov23liHRpppWvhAAS4y5",
+      "clientSecret": "b8b619c4236bfb4ff11e3f1129caf38e2c12723a",
+      "callbackUrl": "/auth/github/callback"
+    },
+    "session": {
+      "secret": "someSuperSecretString123!@"
+    },
+    "mongodb": {
+      "uri": "mongodb://localhost:27017/github_analytics"
+    }
+  }
+  

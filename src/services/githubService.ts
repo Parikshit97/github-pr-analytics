@@ -67,7 +67,7 @@ export class GitHubService {
         userId: 'someUserIdString',
         owner,
         repo,
-        endpoint: 'getOpenPRs',
+        endpoint: 'getPRTimingMetrics',
         requestedAt: new Date(),
         status: 'success',
         responseTimeMs: Date.now()
@@ -107,6 +107,16 @@ export class GitHubService {
         created_at: pr.created_at ?? '',
         status: pr.draft ? 'draft' : 'open',
       }));
+
+      await logUserRequest({
+        userId: 'someUserIdString',
+        owner,
+        repo,
+        endpoint: 'getOpenPRs',
+        requestedAt: new Date(),
+        status: 'success',
+        responseTimeMs: Date.now()
+      });
   
       res.json(result);
     } catch (error: any) {
@@ -149,6 +159,16 @@ static async getDeveloperAnalytics(
           0
         ) / mergedPRs.length
       : 0;
+
+      await logUserRequest({
+        userId: 'someUserIdString',
+        owner,
+        repo,
+        endpoint: 'getDeveloperAnalytics',
+        requestedAt: new Date(),
+        status: 'success',
+        responseTimeMs: Date.now()
+      });
 
     return res.json({
       total_prs: devPRs.length,

@@ -1,0 +1,13 @@
+{
+    "server": {
+      "baseUrl": "https://github-pr-analytics.onrender.com"
+    },
+    "github": {
+      "token": "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",
+      "callbackUrl": "https://github-pr-analytics.onrender.com/auth/github/callback"
+    },
+    "mongodb": {
+      "uri": "mongodb+srv://parikshit3097:lJMciGe9YWFsuEoF@github-pr-analytics.bp8q7jt.mongodb.net/?retryWrites=true&w=majority&appName=github-pr-analytics"
+    }
+  }
+  

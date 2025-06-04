@@ -1,9 +1,11 @@
 import { MongoClient, Db, Collection, WithId, Document } from 'mongodb';
-import dotenvFlow from 'dotenv-flow';
 
-dotenvFlow.config();
+import config from 'config';
 
-const uri = process.env.MONGODB_URI || 'mongodb://mongo:27017';
+const MONGODB_URI = config.get<string>('mongodb.uri');
+
+
+const uri = MONGODB_URI;
 const dbName = 'github_analytics';
 
 let client: MongoClient;
