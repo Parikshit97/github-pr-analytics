@@ -90,20 +90,6 @@ docker-compose up --build
 
 ---
 
-## 📦 Environment Variables
-
-| Key                    | Description                                     |
-|------------------------|-------------------------------------------------|
-| `PORT`                 | Port to run the app                             |
-| `MONGODB_URI`          | MongoDB Atlas connection string                 |
-| `SESSION_SECRET`       | Session key                                     |
-| `GITHUB_CLIENT_ID`     | GitHub OAuth App Client ID                      |
-| `GITHUB_CLIENT_SECRET` | GitHub OAuth App Client Secret                  |
-| `GITHUB_CALLBACK_URL`  | GitHub OAuth redirect URI                       |
-| `BASE_URL`             | App's base URL                                  |
-| `GITHUB_TOKEN`         | (Optional) GitHub Personal Access Token         |
-
----
 
 ## 📈 API Endpoints
 
