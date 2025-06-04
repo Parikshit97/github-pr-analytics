@@ -2,6 +2,10 @@
 
 GitHub PR Analytics is a backend service that provides analytics for GitHub pull requests, such as open durations, average merge time, and longest open PRs. It is built with Node.js, TypeScript, Express, and MongoDB, and can be run using Docker or deployed to platforms like Render.
 
+## 🌐 Deployment Info
+
+This application is deployed on [Render](https://render.com) using their free tier infrastructure. It uses MongoDB Atlas as the managed database service, where all authenticated user requests and analytics data are securely logged and stored. You can access the live service here:  
+
 🌐 **Live URL:** [https://github-pr-analytics.onrender.com](https://github-pr-analytics.onrender.com)  
 > Requires GitHub login for access.
 
@@ -67,32 +71,13 @@ npm install
 NODE_ENV=development NODE_CONFIG_DIR=./src/config npm run dev
 ```
 
-> Ensure `src/config/development.json` is configured correctly and mongodb running locally.
+> Ensure `src/config/development.json` is configured correctly and MongoDB running locally.
+> Currently, development.json is configured to connect to a MongoDB instance running in a Docker container.
 
 ### 4. Using Docker Compose
 ```bash
 docker-compose up --build
 ```
----
-
-## 🌐 Production Deployment (Render)
-
-### 1. Connect GitHub repo to Render
-- Select **Docker** for deployment method
-
-### 2. Set up Render settings
-- **Build Command**:
-  ```bash
-  npm install && npm run build
-  ```
-- **Start Command**:
-  ```bash
-  NODE_ENV=production NODE_CONFIG_DIR=./src/config node dist/index.js
-  ```
-
-### 3. Configure Environment Variables in Render Dashboard
-Set all required values as secrets.
-
 ---
 
 ## 🔐 Authentication
