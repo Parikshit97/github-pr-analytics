@@ -89,6 +89,16 @@ Returns analytics on:
 | `owner`   | string | GitHub repository owner     |
 | `repo`    | string | GitHub repository name      |
 
+### Curl for Postman Request
+
+```
+curl -X 'GET' \
+  'https://github-pr-analytics.onrender.com/repos/Parikshit97/alertmonitor/prs/timing' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer <your-github-token>'
+
+  ```
+
 #### ✅ Example Response
 
 ```json
@@ -122,6 +132,14 @@ Returns PR analytics for a specific developer in a repo:
 - Total number of PRs
 - Success (merged) rate
 - Average time to merge
+
+### Curl request for Postman
+
+```
+curl --location 'https://github-pr-analytics.onrender.com/repos/Parikshit97/alertmonitor/dev/Parikshit97/analytics' \
+-H 'accept: application/json' \
+ -H 'Authorization: Bearer <your-github-token>'
+```
 
 #### 🔸 Path Parameters
 
