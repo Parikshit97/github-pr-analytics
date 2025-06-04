@@ -61,29 +61,36 @@ describe('GitHubService', () => {
 
   describe('getPRTimingMetrics', () => {
     it('should return timing metrics', async () => {
-      const now = new Date();
-      const openPRs = [{ state: 'open', created_at: now.toISOString(), title: 'Open PR', user: { login: 'user1' } }];
+      const createdAt = new Date(Date.now() - 10000).toISOString(); // 10s ago
+      const closedAt = new Date().toISOString();
+  
+      const openPRs = [{ state: 'open', created_at: createdAt, title: 'Open PR', user: { login: 'user1' } }];
       const closedPRs = [{
         state: 'closed',
-        created_at: new Date(now.getTime() - 10000).toISOString(),
-        closed_at: now.toISOString(),
+        created_at: new Date(Date.now() - 20000).toISOString(), // 20s ago
+        closed_at: new Date(Date.now() - 10000).toISOString(),  // 10s ago
         title: 'Closed PR',
         user: { login: 'user2' }
       }];
+  
       req = {
         params: { owner: 'test', repo: 'repo' },
         octokit: createMockOctokit([...openPRs, ...closedPRs]) as unknown as Octokit,
       };
-
+  
       await GitHubService.getPRTimingMetrics(req as any, res);
-
+  
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
         open_durations_ms: expect.any(Array),
         average_closed_duration_ms: expect.any(Number),
-        longest_open_pr: expect.objectContaining({ title: 'Open PR', author: 'user1' }),
+        longest_open_pr: expect.objectContaining({
+          title: 'Open PR',
+          author: 'user1',
+        }),
       }));
     });
   });
+  
 
   describe('getDeveloperAnalytics', () => {
     it('should return developer analytics', async () => {
