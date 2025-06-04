@@ -1,118 +1,132 @@
-# 📊 GitHub PR Analytics API
+# GitHub PR Analytics
 
-A RESTful API built with **TypeScript**, **Node.js**, and **Express.js** to provide insights into pull request (PR) activity in GitHub repositories. It offers developer-wise analytics, PR timing metrics, and is powered by GitHub’s public API.
+GitHub PR Analytics is a backend service that provides analytics for GitHub pull requests, such as open durations, average merge time, and longest open PRs. It is built with Node.js, TypeScript, Express, and MongoDB, and can be run using Docker or deployed to platforms like Render.
 
 ---
 
 ## 🚀 Features
 
-- 🔍 Get open PRs for any public GitHub repo
-- 📈 Analytics per developer:
-  - Total PRs
-  - Success rate (merged vs. opened)
-  - Average merge time
-- ⏱️ PR timing metrics:
-  - Average time open
-  - Longest open PRs
-- 🧾 Swagger-based API documentation
-- ✅ Deployed on [Render](https://render.com)
+- GitHub OAuth-based authentication  
+- Fetches PR data using GitHub API  
+- Computes useful analytics:
+  - Average PR merge time  
+  - Longest open PR  
+  - Open/Closed PR durations  
+- MongoDB Atlas integration  
+- Dockerized using Docker Compose
 
 ---
 
-## 📌 Live API
+## 🏗️ Project Structure
 
-> Base URL: `https://github-pr-analytics.onrender.com`
-
-Example endpoint:
 ```
-GET /repos/{owner}/{repo}/dev/{developer}/analytics
+.
+├── src/
+│   ├── config/              # Environment-specific configurations
+│   ├── controllers/         # Route handler logic
+│   ├── middleware/          # Middleware (auth, error handling)
+│   ├── routes/              # Express routes
+│   ├── services/            # Business logic
+│   └── index.ts             # App entry point
+├── dist/                    # Compiled output
+├── docker-compose.yml       # Docker config for dev/prod
+├── Dockerfile
+├── .env.*                   # Optional local env files
+└── README.md
 ```
 
-Try out the [Swagger UI](https://github-pr-analytics.onrender.com) for interactive documentation.
-
 ---
 
-## 🛠️ Tech Stack
+## 🧑‍💻 Local Development
 
-- **Backend**: Node.js, Express.js
-- **Language**: TypeScript
-- **Database**: MongoDB
-- **GitHub Integration**: Octokit
-- **Docs**: Swagger (OpenAPI)
-- **Deployment**: Render
-
----
-
-## 🧪 Local Development
-
-### Prerequisites
-- Node.js (>= 18)
-- MongoDB running locally or Atlas URI
-- GitHub Personal Access Token (add to `.env`)
-
-### Setup
-
+### 1. Clone the repo
 ```bash
-git clone https://github.com/your-username/github-pr-analytics.git
+git clone https://github.com/<your-username>/github-pr-analytics.git
 cd github-pr-analytics
+```
+
+### 2. Install dependencies
+```bash
 npm install
 ```
 
-Create a `.env` file:
-```env
-PORT=3000
-MONGODB_URI=your_mongodb_uri
-GITHUB_TOKEN=your_github_token
-BASE_URL=http://localhost:3000
+### 3. Run with local config
+```bash
+NODE_ENV=development NODE_CONFIG_DIR=./src/config npm run dev
 ```
 
-### Run the server
+> Ensure `src/config/development.json` is configured correctly.
+
+### 4. Using Docker Compose
+```bash
+docker-compose up --build
+```
+
+> It uses `.env.development` by default.
+
+---
+
+## 🌐 Production Deployment (Render)
+
+### 1. Connect GitHub repo to Render
+- Select **Docker** for deployment method
+
+### 2. Set up Render settings
+- **Build Command**:
+  ```bash
+  npm install && npm run build
+  ```
+- **Start Command**:
+  ```bash
+  NODE_ENV=production NODE_CONFIG_DIR=./src/config node dist/index.js
+  ```
+
+### 3. Configure Environment Variables in Render Dashboard
+Set all required values as secrets.
+
+---
+
+## 🔐 Authentication
+
+- Uses GitHub OAuth App
+- Required environment variables:
+  - `GITHUB_CLIENT_ID`
+  - `GITHUB_CLIENT_SECRET`
+  - `GITHUB_CALLBACK_URL`
+
+---
+
+## 📦 Environment Variables
+
+| Key                    | Description                                     |
+|------------------------|-------------------------------------------------|
+| `PORT`                 | Port to run the app                             |
+| `MONGODB_URI`          | MongoDB Atlas connection string                 |
+| `SESSION_SECRET`       | Session key                                     |
+| `GITHUB_CLIENT_ID`     | GitHub OAuth App Client ID                      |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth App Client Secret                  |
+| `GITHUB_CALLBACK_URL`  | GitHub OAuth redirect URI                       |
+| `BASE_URL`             | App's base URL                                  |
+| `GITHUB_TOKEN`         | (Optional) GitHub Personal Access Token         |
+
+---
+
+## 📈 API Endpoints
+
+> All endpoints require GitHub OAuth authentication
+
+- `GET /repos/:owner/:repo/prs/timing`  
+  → Returns timing metrics (average/longest open PR)
+
+- `GET /repos/:owner/:repo/prs/developer/:developerId`  
+  → Developer-specific analytics
+
+---
+
+## 🧪 Testing
 
 ```bash
-npm run dev
+npm test
 ```
 
 ---
-
-## 📦 API Endpoints
-
-### Get Open PRs
-```
-GET /repos/:owner/:repo/prs
-```
-
-### Get Developer Analytics
-```
-GET /repos/:owner/:repo/dev/:developer/analytics
-```
-
-### Get PR Timing Metrics
-```
-GET /repos/:owner/:repo/prs/metrics
-```
-
-All endpoints are documented in [Swagger UI](https://github-pr-analytics.onrender.com).
-
----
-
-## 🧼 Project Structure
-
-```
-├── src/
-│   ├── routes/
-│   ├── controllers/
-│   ├── services/
-│   ├── utils/
-│   ├── swagger.ts
-│   └── app.ts
-├── .env
-├── tsconfig.json
-└── README.md
-```
----
-
-## 🙋‍♂️ Author
-
-**Parikshit Narang**
-
-- GitHub: [@Parikshit97](https://github.com/Parikshit97)
