@@ -25,16 +25,26 @@ GitHub PR Analytics is a backend service that provides analytics for GitHub pull
 ```
 .
 ├── src/
-│   ├── config/              # Environment-specific configurations
-│   ├── controllers/         # Route handler logic
-│   ├── middleware/          # Middleware (auth, error handling)
-│   ├── routes/              # Express routes
-│   ├── services/            # Business logic
-│   └── index.ts             # App entry point
-├── dist/                    # Compiled output
-├── docker-compose.yml       # Docker config for dev/prod
-├── Dockerfile
-└── README.md
+│   ├── clients/             # External service clients (e.g., GitHub Octokit)
+│   ├── config/              # Environment-specific configurations (development/production)
+│   ├── controllers/         # Route handler logic for each API endpoint
+│   ├── middleware/          # Express middleware (authentication, error handling, sessions)
+│   ├── routes/              # Express route definitions
+│   ├── services/            # Core business logic and data processing
+│   ├── types/               # TypeScript interfaces and type definitions
+│   ├── index.ts             # App entry point (server setup)
+│   ├── mongoCRUD.ts         # MongoDB utility functions for logging/storing analytics
+│   └── swagger.ts           # Swagger documentation setup
+├── tests/                   # Unit and integration tests
+├── AI_USAGE.md              # Documentation on AI integration (if applicable)
+├── API_DOCS.md              # Detailed API documentation
+├── dist/                    # Compiled output after TypeScript build
+├── docker-compose.dev.yml   # Docker Compose configuration for development
+├── docker-compose.prod.yml  # Docker Compose configuration for production
+├── Dockerfile               # Base Docker image setup
+├── README.md
+└── tsconfig.json            # TypeScript configuration
+
 ```
 
 ---
