@@ -90,19 +90,6 @@ docker-compose up --build
 
 ---
 
-
-## 📈 API Endpoints
-
-> All endpoints require GitHub OAuth authentication
-
-- `GET /repos/:owner/:repo/prs/timing`  
-  → Returns timing metrics (average/longest open PR)
-
-- `GET /repos/:owner/:repo/prs/developer/:developerId`  
-  → Developer-specific analytics
-
----
-
 ## 🧪 Testing
 
 ```bash
