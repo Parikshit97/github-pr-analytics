@@ -39,7 +39,7 @@ Returns a list of open PRs for the specified GitHub repository.
 | `owner`   | string | GitHub repository owner     |
 | `repo`    | string | GitHub repository name      |
 
-### Curl for Postman Request
+### Curl
 
 ```
 curl -X 'GET' \
@@ -89,7 +89,7 @@ Returns analytics on:
 | `owner`   | string | GitHub repository owner     |
 | `repo`    | string | GitHub repository name      |
 
-### Curl for Postman Request
+### Curl
 
 ```
 curl -X 'GET' \
@@ -133,7 +133,7 @@ Returns PR analytics for a specific developer in a repo:
 - Success (merged) rate
 - Average time to merge
 
-### Curl request for Postman
+### Curl
 
 ```
 curl --location 'https://github-pr-analytics.onrender.com/repos/Parikshit97/alertmonitor/dev/Parikshit97/analytics' \
