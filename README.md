@@ -6,7 +6,7 @@ GitHub PR Analytics is a backend service that provides analytics for GitHub pull
 
 This application is deployed on [Render](https://render.com) using their free tier infrastructure. It uses MongoDB Atlas as the managed database service, where all authenticated user requests and analytics data are securely logged and stored. You can access the live service here:  
 
-🌐 **Live URL:** [https://github-pr-analytics.onrender.com](https://github-pr-analytics.onrender.com)  
+🌐 **Live URL:** [https://github-pr-analytics.onrender.com/docs](https://github-pr-analytics.onrender.com)  
 > Requires GitHub login for access.
 
 ---
