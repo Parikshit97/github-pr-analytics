@@ -1,11 +1,11 @@
-version: '3.8'
-
 services:
   github-pr-analytics:
     build:
       context: .
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - NODE_CONFIG_DIR=./src/config

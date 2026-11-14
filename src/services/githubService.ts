@@ -12,6 +12,7 @@ export class GitHubService {
     req: AuthenticatedRequest<PRRequestParams>,
     res: Response<PRTimingMetrics | { message: string }>
   ) {
+    const startedAt = Date.now();
     const { owner, repo } = req.params;
     const octokit = req.octokit;
     if (!octokit) {
@@ -19,7 +20,7 @@ export class GitHubService {
     }
 
     try {
-      const { data } = await octokit.pulls.list({
+      const data = await octokit.paginate(octokit.pulls.list, {
         owner,
         repo,
         state: 'all',
@@ -64,13 +65,13 @@ export class GitHubService {
 
       // Save metrics to MongoDB using CRUD helper
       await logUserRequest({
-        userId: 'someUserIdString',
+        userId: req.user?.id ?? 'token-authenticated',
         owner,
         repo,
         endpoint: 'getPRTimingMetrics',
         requestedAt: new Date(),
         status: 'success',
-        responseTimeMs: Date.now()
+        responseTimeMs: Date.now() - startedAt
       });
 
       res.json(response);
@@ -86,6 +87,7 @@ export class GitHubService {
     req: AuthenticatedRequest<PRRequestParams>,
     res: Response<OpenPR[] | { message: string }>
   ) {
+    const startedAt = Date.now();
     const { owner, repo } = req.params;
   
     const octokit = req.octokit;
@@ -94,7 +96,7 @@ export class GitHubService {
     }
   
     try {
-      const { data } = await octokit.pulls.list({
+      const data = await octokit.paginate(octokit.pulls.list, {
         owner,
         repo,
         state: 'open',
@@ -109,13 +111,13 @@ export class GitHubService {
       }));
 
       await logUserRequest({
-        userId: 'someUserIdString',
+        userId: req.user?.id ?? 'token-authenticated',
         owner,
         repo,
         endpoint: 'getOpenPRs',
         requestedAt: new Date(),
         status: 'success',
-        responseTimeMs: Date.now()
+        responseTimeMs: Date.now() - startedAt
       });
   
       res.json(result);
@@ -129,6 +131,7 @@ static async getDeveloperAnalytics(
   req: AuthenticatedRequest<{ owner: string; repo: string; username: string }>,
   res: Response<DeveloperAnalyticsResponse | { message: string }>
 ) {
+  const startedAt = Date.now();
   const { owner, repo, username } = req.params;
 
   const octokit = req.octokit;
@@ -137,7 +140,7 @@ static async getDeveloperAnalytics(
   }
 
   try {
-    const { data } = await octokit.pulls.list({
+    const data = await octokit.paginate(octokit.pulls.list, {
       owner,
       repo,
       state: 'all',
@@ -150,7 +153,7 @@ static async getDeveloperAnalytics(
       return res.status(404).json({ message: `No PRs found for developer ${username}` });
     }
 
-    const mergedPRs = devPRs.filter(pr => pr.merged_at !== null);
+    const mergedPRs = devPRs.filter(pr => Boolean(pr.merged_at));
 
     const avgMergeTimeMs = mergedPRs.length
       ? mergedPRs.reduce(
@@ -161,13 +164,13 @@ static async getDeveloperAnalytics(
       : 0;
 
       await logUserRequest({
-        userId: 'someUserIdString',
+        userId: req.user?.id ?? 'token-authenticated',
         owner,
         repo,
         endpoint: 'getDeveloperAnalytics',
         requestedAt: new Date(),
         status: 'success',
-        responseTimeMs: Date.now()
+        responseTimeMs: Date.now() - startedAt
       });
 
     return res.json({

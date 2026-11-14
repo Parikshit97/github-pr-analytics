@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { Octokit } from "@octokit/rest";
+import { GitHubClient } from "../clients/GitHubClient.js";
 
 interface AuthenticatedRequest extends Request {
   octokit?: Octokit;
@@ -15,7 +16,7 @@ export async function ensureAuthenticated(
   // If Bearer token exists, use that
   if (authHeader?.startsWith("Bearer ")) {
     const token = authHeader.slice(7);
-    const octokit = new Octokit({ auth: token });
+    const octokit = new GitHubClient(token).getClient();
 
     try {
       await octokit.users.getAuthenticated();
@@ -31,7 +32,7 @@ export async function ensureAuthenticated(
   // If authenticated via session, use req.user.token from Passport
   if (req.isAuthenticated?.() && (req.user as any)?.accessToken) {
     const accessToken = (req.user as any).accessToken;
-    req.octokit = new Octokit({ auth: accessToken });
+    req.octokit = new GitHubClient(accessToken).getClient();
     return next();
   }
 
@@ -68,7 +69,7 @@ export function ensureSessionAuthenticated(
     const user = req.user as { accessToken?: string };
 
     if (user?.accessToken) {
-      const octokit = new Octokit({ auth: user.accessToken });
+      const octokit = new GitHubClient(user.accessToken).getClient();
       req.octokit = octokit;
       return next(); // Proceed with octokit client attached
     } else {

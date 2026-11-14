@@ -1,11 +1,12 @@
 {
   "type": "module",
-  "main": "dist/src/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "vitest run",
-    "build": "npx tsc && npm run test",
-    "start": "NODE_ENV=development NODE_CONFIG_DIR=./src/config node dist/index.js",
-    "dev": "ts-node-esm src/index.ts"
+    "build": "tsc",
+    "start": "NODE_CONFIG_DIR=./src/config node --env-file-if-exists=.env dist/index.js",
+    "dev": "npm run build && NODE_ENV=development npm start",
+    "check": "npm run build && npm test"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.44.1",
@@ -14,6 +15,7 @@
     "config": "^4.0.0",
     "dotenv": "^16.5.0",
     "dotenv-flow": "^4.1.0",
+    "express": "^5.1.0",
     "express-session": "^1.18.1",
     "mongodb": "^6.17.0",
     "passport": "^0.7.0",
@@ -35,6 +37,12 @@
     "mock-req-res": "^1.2.1",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
-    "vitest": "^3.2.0"
+    "vitest": "^4.1.12"
+  },
+  "name": "github-pr-analytics",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22"
   }
 }

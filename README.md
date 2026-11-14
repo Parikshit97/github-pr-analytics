@@ -1,110 +1,55 @@
 # GitHub PR Analytics
 
-GitHub PR Analytics is a backend service that provides analytics for GitHub pull requests, such as open durations, average merge time, and longest open PRs. It is built with Node.js, TypeScript, Express, and MongoDB, and can be run using Docker or deployed to platforms like Render.
+A TypeScript backend for inspecting pull-request activity through the GitHub API. It supports GitHub OAuth sessions and bearer-token authentication, computes timing and developer metrics, and records successful requests in MongoDB.
 
-## 🌐 Deployment Info
+## Request flow
 
-This application is deployed on [Render](https://render.com) using their free tier infrastructure. It uses MongoDB Atlas as the managed database service, where all authenticated user requests and analytics data are securely logged and stored. You can access the live service here:  
+`HTTP request → authentication → controller → paginated GitHub API → metrics → MongoDB request log → JSON response`
 
-🌐 **Live URL:** [https://github-pr-analytics.onrender.com/docs](https://github-pr-analytics.onrender.com)  
-> Requires GitHub login for access.
+All pull-request list endpoints follow GitHub pagination rather than stopping at 100 results. The throttling client retries the first primary-rate-limit response once; secondary-limit responses are not automatically retried.
 
----
+## Local setup
 
-## 🚀 Features
+Requirements: Node.js 22 or later, npm, and MongoDB. OAuth login also requires a GitHub OAuth application with callback URL `http://localhost:3000/auth/github/callback`.
 
-- GitHub OAuth-based authentication  
-- Fetches PR data using GitHub API  
-- Computes useful analytics:
-  - Average PR merge time  
-  - Longest open PR  
-  - Open/Closed PR durations  
-- MongoDB Atlas integration  
-- Dockerized using Docker Compose
-
----
-
-## 🏗️ Project Structure
-
-```
-.
-├── src/
-│   ├── clients/             # External service clients (e.g., GitHub Octokit)
-│   ├── config/              # Environment-specific configurations (development/production)
-│   ├── controllers/         # Route handler logic for each API endpoint
-│   ├── middleware/          # Express middleware (authentication, error handling, sessions)
-│   ├── routes/              # Express route definitions
-│   ├── services/            # Core business logic and data processing
-│   ├── types/               # TypeScript interfaces and type definitions
-│   ├── index.ts             # App entry point (server setup)
-│   ├── mongoCRUD.ts         # MongoDB utility functions for logging/storing analytics
-│   └── swagger.ts           # Swagger documentation setup
-├── tests/                   # Unit and integration tests
-├── AI_USAGE.md              # Documentation on AI integration (if applicable)
-├── API_DOCS.md              # Detailed API documentation
-├── dist/                    # Compiled output after TypeScript build
-├── docker-compose.dev.yml   # Docker Compose configuration for development
-├── docker-compose.prod.yml  # Docker Compose configuration for production
-├── Dockerfile               # Base Docker image setup
-├── README.md
-└── tsconfig.json            # TypeScript configuration
-
+```sh
+npm ci
+cp .env.example .env
+# Set OAuth credentials and a session secret in .env.
+npm run check
+npm start
 ```
 
----
+`npm run dev` builds and starts the development configuration. `npm run build` only compiles TypeScript; `npm test` runs the mocked regression suite. A live GitHub account and MongoDB are not needed for the tests.
 
-## 🧑‍💻 Local Development
+For local containers, populate `.env` first:
 
-### 1. Clone the repo
-```bash
-git clone git@github.com:Parikshit97/github-pr-analytics.git
-cd github-pr-analytics
+```sh
+docker compose -f docker-compose.dev.yml up --build
 ```
 
-### 2. Install dependencies
-```bash
-npm install
+The development Compose file uses its MongoDB service. Production must supply `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `SESSION_SECRET`, and `MONGODB_URI`; the session secret is separate from the OAuth secret. The environment template contains placeholders only. Previously committed credentials must be rotated at the provider; changing the current files does not remove Git history.
+
+## API
+
+| Route | Authentication | Result |
+|---|---|---|
+| `GET /health` | None | Process liveness; does not verify MongoDB or GitHub |
+| `GET /auth/github` | Browser OAuth | Starts sign-in |
+| `GET /docs` | OAuth session | OpenAPI interface |
+| `GET /repos/:owner/:repo/prs/open` | OAuth session or bearer token | Open and draft PRs |
+| `GET /repos/:owner/:repo/prs/timing` | OAuth session or bearer token | Open durations, average closed duration, longest open PR |
+| `GET /repos/:owner/:repo/dev/:username/analytics` | OAuth session or bearer token | PR count, merged fraction, average merge duration |
+
+```sh
+curl -H "Authorization: Bearer $GITHUB_TOKEN" \
+  http://localhost:3000/repos/OWNER/REPOSITORY/prs/timing
 ```
 
-### 3. Run with local config
-```bash
-NODE_ENV=development NODE_CONFIG_DIR=./src/config npm run dev
-```
+Durations are milliseconds. `average_closed_duration_ms` includes closed-but-unmerged PRs. `success_rate` is the fraction of the developer’s PRs that were merged, expressed as a decimal string; it is not a measure of developer quality. Successful endpoint responses currently depend on MongoDB request logging succeeding.
 
-> Ensure `src/config/development.json` is configured correctly and MongoDB running locally.
-> Currently, development.json is configured to connect to a MongoDB instance running in a Docker container.
+## Verification and limits
 
-### 4. Using Docker Compose
-```bash
-docker-compose up --build
-```
----
+The regression suite covers controllers, timing calculations, an empty repository, missing authentication, and a real Octokit two-page traversal whose longest-open result appears after the first 100 PRs. CI builds and runs tests on Node.js 22.
 
-## 🔐 Authentication
-
-- Uses GitHub OAuth App
-- Required environment variables:
-  - `GITHUB_CLIENT_ID`
-  - `GITHUB_CLIENT_SECRET`
-  - `GITHUB_CALLBACK_URL`
-
----
-
-## ✅ Test Strategy
-
-This project uses **[Vitest](https://vitest.dev/)** for unit testing and mocking.
-
-- All service methods are covered with unit tests using mock responses for the GitHub API via the Octokit client.
-- MongoDB operations are mocked to prevent side effects or the need for a live database during test runs.
-- Tests validate both successful API flows and error-handling branches.
-
-To run tests locally:
-
-```bash
-npm test
-```
-
-> 📂 Test files are located under the `tests/` directory and follow the `*.test.ts` naming convention.
-
-
----
+OAuth sign-in and live MongoDB integration require configured services and were not exercised by the mocked suite. Express’s in-memory session store is intended for development; a persistent shared store is needed for multiple production instances. Paginating a very large repository can take multiple GitHub requests and consume its API rate allowance.

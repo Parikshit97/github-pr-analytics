@@ -19,6 +19,7 @@ const createMockResponse = () => {
 };
 
 const createMockOctokit = (pullsData: any[]) => ({
+  paginate: vi.fn().mockResolvedValue(pullsData),
   pulls: {
     list: vi.fn().mockResolvedValue({ data: pullsData }),
   },

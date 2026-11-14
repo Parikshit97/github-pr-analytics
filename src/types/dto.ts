@@ -44,7 +44,7 @@ export type PRTimingMetricsResponse = PRTimingMetrics | ErrorResponse;
 
 export interface AuthenticatedRequest<P = any> extends Request<P> {
   octokit?: Octokit;
-  user?: { accessToken?: string };
+  user?: { id?: string; username?: string; accessToken?: string };
 }
 
 export interface DeveloperAnalyticsResponse {

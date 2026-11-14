@@ -16,11 +16,16 @@ import config from 'config';
 const PORT = config.get<number>('server.port');
 
 
-const GITHUB_CLIENT_SECRET = config.get<string>('github.clientSecret');
+const SESSION_SECRET = config.get<string>('session.secret');
+if (process.env.NODE_ENV === 'production' && (!process.env.SESSION_SECRET || !process.env.GITHUB_CLIENT_SECRET || !process.env.GITHUB_CLIENT_ID)) {
+  throw new Error('Production requires SESSION_SECRET, GITHUB_CLIENT_ID, and GITHUB_CLIENT_SECRET.');
+}
 const app = express();
 
+app.get('/health', (_req, res) => { res.json({ status: 'ok' }); });
+
 app.use(session({
-  secret: GITHUB_CLIENT_SECRET,
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false
 }));
@@ -30,7 +35,7 @@ app.use(passport.session());
 
 
 app.get('/', ensureSessionAuthenticated, (req, res) => {
-  res.send(`Welcome, 'GitHub User'}!`);
+  res.send('GitHub PR Analytics');
 });
 
 app.use('/docs', ensureSessionAuthenticated, swaggerUi.serve, swaggerUi.setup(swaggerSpec));

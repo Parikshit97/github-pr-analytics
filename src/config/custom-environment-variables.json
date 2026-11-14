@@ -1,0 +1,20 @@
+{
+  "server": {
+    "port": {
+      "__name": "PORT",
+      "__format": "number"
+    },
+    "baseUrl": "BASE_URL"
+  },
+  "github": {
+    "clientId": "GITHUB_CLIENT_ID",
+    "clientSecret": "GITHUB_CLIENT_SECRET",
+    "callbackUrl": "GITHUB_CALLBACK_URL"
+  },
+  "session": {
+    "secret": "SESSION_SECRET"
+  },
+  "mongodb": {
+    "uri": "MONGODB_URI"
+  }
+}
